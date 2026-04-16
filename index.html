@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>DYE Assist Demo</title>
+  <style>
+    :root {
+      --bg1: #02040a;
+      --bg2: #05070c;
+      --bg3: #0a0f1a;
+      --card: rgba(255,255,255,0.06);
+      --card-border: rgba(34,211,238,0.22);
+      --cyan: #39d7ff;
+      --blue: #4096ff;
+      --text: #ffffff;
+      --muted: rgba(205,243,255,.78);
+      --muted2: rgba(255,255,255,.62);
+      --warning: rgba(245,158,11,.15);
+      --warning-border: rgba(245,158,11,.28);
+      --shadow: 0 25px 80px rgba(0,0,0,.55), 0 0 24px rgba(34,211,238,.08);
+      --radius: 28px;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", Inter, Segoe UI, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top, rgba(0,200,255,0.15), transparent 35%),
+        radial-gradient(circle at bottom, rgba(0,255,150,0.10), transparent 35%),
+        radial-gradient(circle at center, rgba(59,130,246,0.08), transparent 40%),
+        linear-gradient(to bottom, var(--bg1), var(--bg2), var(--bg3));
+      min-height: 100vh;
+    }
+    .app {
+      width: min(100%, 430px);
+      margin: 0 auto;
+      padding: env(safe-area-inset-top) 16px calc(110px + env(safe-area-inset-bottom));
+      min-height: 100vh;
+    }
+    .status { display:flex; justify-content:space-between; align-items:center; padding:10px 2px 8px; font-size:13px; font-weight:600; color:rgba(255,255,255,.92);}
+    .battery{display:flex;gap:6px;align-items:center}.battery .box{width:16px;height:10px;border:1px solid rgba(255,255,255,.5);border-radius:3px}.battery .dot{width:8px;height:8px;border-radius:999px;background:rgba(255,255,255,.8)}.battery .dot.dim{background:rgba(255,255,255,.6)}
+    .screen { display:none; gap:16px; flex-direction:column; }
+    .screen.active { display:flex; }
+    .eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.22em;color:rgba(103,232,249,.6);font-weight:700}
+    h1{margin:2px 0 0;font-size:30px;line-height:1.05;letter-spacing:-.04em;font-weight:700}
+    .subtitle{margin-top:6px;font-size:15px;line-height:1.4;color:var(--muted)}
+    .card{
+      background:var(--card);border:1px solid var(--card-border);border-radius:var(--radius);
+      box-shadow:var(--shadow);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);overflow:hidden;padding:18px;
+    }
+    .card.clickable{cursor:pointer}.card.clickable:active{transform:scale(.99)}
+    .card.dark{background:linear-gradient(135deg,#0c111a,#05070c);box-shadow:0 0 30px rgba(0,200,255,.2)}
+    .card.energy{background:linear-gradient(135deg,rgba(6,182,212,.12),rgba(59,130,246,.08))}
+    .card.primary{background:linear-gradient(90deg,var(--cyan),var(--blue));color:#03111b;border-color:transparent;box-shadow:0 0 20px rgba(0,200,255,.4)}
+    .row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .muted{color:var(--muted2)} .muted-cyan{color:rgba(165,243,252,.82)}
+    .smallcaps{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.18em}
+    .title-lg{font-size:26px;font-weight:700;letter-spacing:-.04em}
+    .title-md{font-size:20px;font-weight:700;letter-spacing:-.03em}
+    .title-sm{font-size:17px;font-weight:600}
+    .hero{position:relative;aspect-ratio:16/10;background:#000;border-radius:var(--radius);overflow:hidden}
+    .hero img,.thumb img,.scanner-preview img{width:100%;height:100%;object-fit:contain;display:block}
+    .hero img{padding:16px;transition:transform .45s ease}.hero:hover img{transform:scale(1.05)}
+    .hero::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 80% 20%,rgba(34,211,238,.18),transparent 22%),radial-gradient(circle at 20% 90%,rgba(59,130,246,.12),transparent 28%),linear-gradient(to top,#05070c,transparent 40%);pointer-events:none}
+    .hero-overlay{position:absolute;left:0;right:0;bottom:0;padding:18px;z-index:1}
+    .pill{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;border:1px solid rgba(34,211,238,.2);background:rgba(0,0,0,.2);backdrop-filter:blur(12px);color:#d6fbff;font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase}
+    .banner{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 16px;border-radius:var(--radius);border:1px solid var(--warning-border);background:var(--warning);color:var(--text)}
+    .toggle{border:none;color:var(--text);background:rgba(255,255,255,.1);border-radius:999px;padding:8px 12px;font-weight:600;display:flex;align-items:center;gap:8px}
+    .toggle.on{background:#22c55e;color:#04110a}
+    .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}.stack{display:flex;flex-direction:column;gap:14px}
+    .btn{width:100%;height:56px;border-radius:28px;border:none;cursor:pointer;font-size:15px;font-weight:700;letter-spacing:-.01em;display:flex;align-items:center;justify-content:center;gap:8px;padding:0 16px}
+    .btn.primary{background:linear-gradient(90deg,var(--cyan),var(--blue));color:#03111b;box-shadow:0 0 22px rgba(0,200,255,.38)}
+    .btn.secondary{background:rgba(255,255,255,.05);color:var(--text);border:1px solid rgba(34,211,238,.2);box-shadow:0 0 14px rgba(0,200,255,.12)}
+    .btn:disabled{opacity:.45;cursor:not-allowed}
+    .choice{width:100%;text-align:left;border:none;cursor:pointer;border-radius:28px;padding:18px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:white;display:flex;align-items:center;justify-content:space-between;font-size:17px;font-weight:600}
+    .topic-list{display:flex;flex-direction:column;gap:12px}.topic-item{display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .chip-wrap{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}.chip{padding:7px 12px;border-radius:999px;font-size:12px;font-weight:600;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05)}
+    .visual-grid{display:grid;gap:14px}.visual-box{border-radius:20px;border:1px solid rgba(255,255,255,.1);background:#0d121a;padding:16px;margin-top:14px}
+    .o-ring{width:96px;height:96px;border-radius:999px;border:10px solid white;margin:0 auto}
+    .bolt-wrap{position:relative;height:140px;max-width:240px;margin:0 auto}
+    .bolt-body{position:absolute;left:16px;top:48px;width:176px;height:48px;border-radius:999px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.05)}
+    .bolt-ring{position:absolute;left:96px;top:40px;width:40px;height:64px;border-radius:999px;border:2px solid #86efac;background:rgba(134,239,172,.12)}
+    .bolt-label{position:absolute;right:0;top:8px;background:#86efac;color:#03111b;padding:4px 8px;border-radius:999px;font-size:10px;font-weight:700}
+    .bolt-line{position:absolute;right:40px;top:56px;width:48px;height:1px;background:#86efac}
+    .video-preview{position:relative;aspect-ratio:16/9;border-radius:22px;overflow:hidden;border:1px solid rgba(34,211,238,.2);background:radial-gradient(circle at top,rgba(34,211,238,.16),transparent 45%),linear-gradient(135deg,#0a1220,#05070c);margin-top:14px}
+    .play{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}.play-btn{width:64px;height:64px;border-radius:999px;border:1px solid rgba(103,232,249,.4);background:rgba(34,211,238,.15);box-shadow:0 0 24px rgba(34,211,238,.3);display:flex;align-items:center;justify-content:center;font-size:28px;color:#c8f8ff}
+    .progress{position:absolute;left:0;right:0;bottom:0;height:6px;background:rgba(255,255,255,.1)}.progress>div{width:66%;height:100%;background:linear-gradient(90deg,#67e8f9,#3b82f6);box-shadow:0 0 18px rgba(34,211,238,.5)}
+    .diag-box{margin-top:14px;border-radius:22px;border:1px solid rgba(34,211,238,.2);background:#07111d;padding:16px}
+    .bar{height:8px;border-radius:999px;background:rgba(255,255,255,.1);overflow:hidden}.bar>div{height:100%;background:linear-gradient(90deg,#67e8f9,#3b82f6);box-shadow:0 0 14px rgba(34,211,238,.45)}
+    .diag-row{margin-top:12px}.diag-head{display:flex;justify-content:space-between;font-size:12px;color:rgba(207,250,254,.7);margin-bottom:4px}
+    .thumb{width:64px;height:64px;overflow:hidden;border-radius:22px;border:1px solid rgba(255,255,255,.1)}
+    .scanner-preview{position:relative;aspect-ratio:9/16;overflow:hidden;background:linear-gradient(135deg,#05070c,#0b1525)}
+    .scanner-preview::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at center,rgba(34,211,238,.16),transparent 50%)}
+    .scanner-frame{position:absolute;left:32px;right:32px;top:96px;bottom:96px;border-radius:28px;border:1px solid rgba(103,232,249,.3);box-shadow:0 0 24px rgba(34,211,238,.25)}
+    .scanner-line{position:absolute;left:32px;right:32px;top:50%;height:1px;background:#67e8f9;box-shadow:0 0 18px rgba(34,211,238,.8)}
+    .scanner-tag{position:absolute;left:50%;bottom:20px;transform:translateX(-50%);padding:8px 14px;border-radius:999px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.18em;color:#d6fbff;background:rgba(0,0,0,.35);border:1px solid rgba(103,232,249,.25);backdrop-filter:blur(14px)}
+    .tabbar-wrap{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:center;padding:32px 0 calc(20px + env(safe-area-inset-bottom));background:linear-gradient(to top,rgba(5,7,12,1),rgba(5,7,12,.96),transparent)}
+    .tabbar{width:min(calc(100% - 32px),398px);border-radius:38px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);padding:10px;box-shadow:0 20px 80px rgba(0,0,0,.48);backdrop-filter:blur(24px)}
+    .grabber{width:96px;height:6px;border-radius:999px;background:rgba(255,255,255,.18);margin:0 auto 10px}.tabs{display:flex;gap:4px}
+    .tab{flex:1;border:none;background:none;color:rgba(255,255,255,.62);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:8px 2px;font-size:11px;font-weight:600}
+    .tab-icon{width:36px;height:36px;border-radius:999px;display:grid;place-items:center;background:transparent;border:1px solid transparent;font-size:16px}
+    .tab.active{color:white}.tab.active .tab-icon{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.08)}
+    .field-mode{font-size:17px}
+    @media (max-width:380px){.grid-2{grid-template-columns:1fr}.grid-3{grid-template-columns:1fr 1fr 1fr}.title-lg{font-size:23px}h1{font-size:28px}}
+  </style>
+</head>
+<body>
+  <div id="app" class="app"></div>
+
+  <script>
+    const markers = [
+      {id:"dsrplus",name:"DSR+",subtitle:"Current platform",photo:"https://cdn.shopify.com/s/files/1/0870/3392/products/DYE-DSR-Plus-Black_1024x1024.png",manualUrl:"https://cdn.shopify.com/s/files/1/0870/3392/files/DSR_OwnersManual_2.23.23.pdf?v=1678423726",fixes:["Leaking down barrel","Eyes not reading","Low velocity","Bolt stick","Won’t power on"],manualTopics:["Bolt maintenance","Eye pipe cleaning","Troubleshooting guide","Velocity adjustment","Battery and power"],quickParts:["O-rings","Eye pipe","Reg parts","Electronics"]},
+      {id:"m2",name:"M2",subtitle:"MOSAir generation",photo:"https://cdn.shopify.com/s/files/1/0870/3392/products/DYE-M2-MOSAir-Black_1024x1024.png",manualUrl:"https://cdn.shopify.com/s/files/1/0870/3392/files/M2-MOSair-Manual_7dc7752f-24bb-4c95-9462-eb2169a28d98.pdf?v=1622174233",fixes:["Leaking air","Inconsistent shots","Eyes not working","Reg service","First shot drop-off"],manualTopics:["Fuse bolt service","Regulator service","Eye system cleaning","Air leak diagnosis","Board basics"],quickParts:["O-rings","Electronics","Reg parts"]},
+      {id:"mxr",name:"MXR",subtitle:"Newest flagship",photo:"https://cdn.shopify.com/s/files/1/0870/3392/products/DYE-MXR-Black_1024x1024.png",manualUrl:"https://cdn.shopify.com/s/files/1/0870/3392/files/MXR-Manual-9-23-25-Horizontal.pdf?v=1758736077",fixes:["Won’t shoot","Leaking from ASA","Chopping paint","Low velocity","Detent wear"],manualTopics:["Bolt assembly","Detent inspection","Breech cleaning","Velocity tuning","Common leak points"],quickParts:["O-rings","Eye pipe","Electronics"]}
+    ];
+    const partsLinks = {
+      all:"https://shop.dyepaintball.com/collections/replacement-parts",
+      orings:"https://shop.dyepaintball.com/collections/replacement-o-rings",
+      eyepipes:"https://shop.dyepaintball.com/collections/eye-pipes/",
+      electronics:"https://shop.dyepaintball.com/collections/replacement-electronics-solenoids",
+      regs:"https://shop.dyepaintball.com/collections/replacement-reg-parts"
+    };
+    const screenByTab = {home:"home",fix:"diagnosis",manual:"manual",parts:"parts",saved:"saved"};
+    const state = {tab:"home",screen:"home",selectedMarkerId:markers[0].id,manualQuery:"",fieldMode:false,step:1,userFixCount:3};
+    const app = document.getElementById("app");
+
+    function currentMarker(){return markers.find(m=>m.id===state.selectedMarkerId)||markers[0];}
+    function filteredTopics(){const q=state.manualQuery.trim().toLowerCase();if(!q)return currentMarker().manualTopics;return currentMarker().manualTopics.filter(t=>t.toLowerCase().includes(q));}
+    function openExternal(url){ if(!url) return; window.open(url, "_blank", "noopener,noreferrer"); }
+    function setScreen(screen){state.screen=screen;render();}
+    function setTab(tab){state.tab=tab;state.screen=screenByTab[tab];render();}
+    function selectMarker(id){state.selectedMarkerId=id;state.manualQuery="";state.screen="home";state.tab="home";render();}
+    function toggleFieldMode(){state.fieldMode=!state.fieldMode;render();}
+    function stepBack(){state.step=Math.max(1,state.step-1);render();}
+    function stepNext(){state.step=Math.min(3,state.step+1);render();}
+    function runSelfCheck(){return {hasOpenExternal: typeof openExternal==="function", hasMarkers:Array.isArray(markers)&&markers.length>0, hasAppRoot:!!app};}
+    function icon(name){const map={Home:"⌂",Fix:"🛠",Manual:"⌕",Parts:"▣",Saved:"★"};return map[name]||"•";}
+    function header(eyebrow,title,subtitle){return `<div><div class="eyebrow">${eyebrow}</div><h1>${title}</h1><div class="subtitle">${subtitle}</div></div>`;}
+    function statusBar(){return `<div class="status"><span>9:41</span><div class="battery"><div class="box"></div><div class="dot"></div><div class="dot dim"></div></div></div>`;}
+    function homeScreen(){const m=currentMarker();return `<div class="screen ${state.screen==="home"?"active":""}">${statusBar()}${header("Marker Control","DYE Assist","Premium field tech for DYE markers, with diagnosis, manuals, and parts lookup.")}<div class="banner"><div style="display:flex;align-items:center;gap:8px;font-size:14px;">🔔 Lube your bolt before your next game</div><button class="toggle ${state.fieldMode?"on":""}" onclick="toggleFieldMode()">☀ Field Mode</button></div><div class="card clickable" onclick="setScreen('markerSelect')"><div class="row"><div><div class="smallcaps" style="color:rgba(103,232,249,.6)">Active Marker</div><div class="title-lg">${m.name}</div><div class="muted-cyan">${m.subtitle}</div></div><div style="width:44px;height:44px;border-radius:999px;border:1px solid rgba(34,211,238,.2);background:rgba(255,255,255,.05);display:grid;place-items:center;">›</div></div></div><div class="card" style="padding:0;overflow:hidden;"><div class="hero"><img src="${m.photo}" alt="${m.name}"><div class="hero-overlay"><div class="pill">DYE ASSIST</div><div style="margin-top:12px;font-size:34px;font-weight:700;letter-spacing:-.04em;">${m.name}</div><div class="muted-cyan">${m.subtitle}</div></div></div></div><div class="grid-3"><div class="card energy"><div class="smallcaps" style="color:rgba(103,232,249,.6)">Fixes</div><div class="title-md">24</div></div><div class="card energy"><div class="smallcaps" style="color:rgba(103,232,249,.6)">Parts</div><div class="title-md">18</div></div><div class="card energy"><div class="smallcaps" style="color:rgba(103,232,249,.6)">My Fixes</div><div class="title-md">${state.userFixCount}</div></div></div><div class="grid-2"><div class="card primary clickable" onclick="state.tab='fix'; setScreen('diagnosis')"><div class="smallcaps" style="color:rgba(3,17,27,.7)">Smart</div><div class="title-md" style="margin-top:10px;">Diagnosis</div><div style="margin-top:8px;font-size:14px;line-height:1.4;color:rgba(3,17,27,.68)">Start with symptoms and get the cleanest next move fast.</div></div><div class="card energy clickable" onclick="state.tab='fix'; setScreen('result')"><div class="smallcaps muted-cyan">Quick</div><div class="title-md" style="margin-top:10px;">Common Fixes</div><div style="margin-top:8px;font-size:14px;line-height:1.4;color:rgba(165,243,252,.75)">Jump straight into the repairs people actually do.</div></div></div>${scannerCard()}${liveDiagnosticsCard()}</div>`;}
+    function markerSelectScreen(){return `<div class="screen ${state.screen==="markerSelect"?"active":""}">${statusBar()}${header("Library","Select Your Marker","Choose the DYE marker you want to tech right now.")}${markers.map(m=>`<div class="card clickable" onclick="selectMarker('${m.id}')"><div class="row"><div style="display:flex;align-items:center;gap:14px;flex:1;"><div class="thumb"><img src="${m.photo}" alt="${m.name}"></div><div><div class="title-md">${m.name}</div><div class="muted">${m.subtitle}</div></div></div><div>›</div></div></div>`).join("")}</div>`;}
+    function diagnosisScreen(){const issues=["Leaking air","Won’t shoot","Low velocity","Eyes not working","Inconsistent shots"];return `<div class="screen ${state.screen==="diagnosis"?"active":""}">${statusBar()}${header("Diagnosis",`${currentMarker().name} Smart Diagnosis`,"Start with the symptom you are seeing first.")}${issues.map(issue=>`<button class="choice" onclick="setScreen('result')"><span>${issue}</span><span style="opacity:.7">›</span></button>`).join("")}</div>`;}
+    function oRingVisual(){return `<div class="visual-grid"><div class="card" style="background:rgba(255,255,255,.06)"><div class="smallcaps" style="color:rgba(255,255,255,.55)">O-Ring Visual</div><div class="visual-box"><div class="o-ring"></div></div><div class="muted" style="margin-top:12px;font-size:14px;">Sail O-ring visual reference.</div></div><div class="card" style="background:rgba(255,255,255,.06)"><div class="smallcaps" style="color:rgba(255,255,255,.55)">Bolt Diagram</div><div class="visual-box"><div class="bolt-wrap"><div class="bolt-body"></div><div class="bolt-ring"></div><div class="bolt-label">O-ring location</div><div class="bolt-line"></div></div></div><div class="muted" style="margin-top:12px;font-size:14px;">Highlighted location on the bolt.</div></div></div>`;}
+    function videoGuideCard(){return `<div class="card energy"><div class="row" style="justify-content:flex-start;gap:8px;"><span>🎬</span><span class="smallcaps" style="color:rgba(165,243,252,.75)">Auto-Playing Repair Clip</span></div><div class="video-preview"><div class="play"><div class="play-btn">▶</div></div><div class="progress"><div></div></div></div><div style="margin-top:12px;font-size:14px;color:rgba(207,250,254,.7)">Micro-guide starts automatically when a fix is recommended.</div></div>`;}
+    function warningCard(){return `<div class="card"><div class="row" style="justify-content:flex-start;gap:8px;"><span style="color:#f87171">⚠</span><span class="smallcaps" style="color:rgba(255,255,255,.55)">Do Not Do This</span></div><div class="title-sm" style="margin-top:12px;">Do not over-grease the bolt.</div><div style="margin-top:6px;font-size:14px;color:rgba(255,255,255,.68)">Too much grease can create new problems and hide the real issue.</div></div>`;}
+    function communityCard(){return `<div class="card energy"><div class="row" style="justify-content:flex-start;gap:8px;"><span>👥</span><span class="smallcaps" style="color:rgba(165,243,252,.75)">Community Trend</span></div><div style="margin-top:12px;font-size:14px;color:rgba(255,255,255,.8)">Most users fixed this issue with a bolt sail O-ring replacement first.</div></div>`;}
+    function liveDiagnosticsCard(){const items=[["Air flow",72],["Bolt cycle",48],["Reg response",86]];return `<div class="card energy"><div class="row" style="justify-content:flex-start;gap:8px;"><span>📡</span><span class="smallcaps" style="color:rgba(165,243,252,.75)">Live Diagnostics</span></div><div class="diag-box"><div class="row" style="font-size:12px;text-transform:uppercase;letter-spacing:.16em;color:rgba(207,250,254,.7)"><span>Leak pattern</span><span>Scanning</span></div>${items.map(([label,value])=>`<div class="diag-row"><div class="diag-head"><span>${label}</span><span>${value}%</span></div><div class="bar"><div style="width:${value}%"></div></div></div>`).join("")}<div style="margin-top:14px;font-size:14px;color:rgba(207,250,254,.8)">⚡ High confidence leak signature detected around bolt assembly.</div></div></div>`;}
+    function scannerCard(){return `<div class="card energy clickable" onclick="state.tab='fix'; setScreen('scanner')"><div class="row" style="justify-content:flex-start;gap:8px;"><span>📷</span><span class="smallcaps" style="color:rgba(165,243,252,.75)">Camera Scanner</span></div><div class="visual-box" style="background:#07111d;border-color:rgba(34,211,238,.2);"><div style="position:relative;aspect-ratio:16/10;overflow:hidden;border-radius:18px;border:1px solid rgba(34,211,238,.15);background:rgba(0,0,0,.4)"><div style="position:absolute;inset:0;background:radial-gradient(circle at center, rgba(34,211,238,.14), transparent 45%)"></div><div style="position:absolute;left:24px;right:24px;top:24px;height:96px;border-radius:18px;border:1px solid rgba(103,232,249,.25)"></div><div style="position:absolute;left:0;right:0;top:50%;height:1px;background:#67e8f9;box-shadow:0 0 18px rgba(34,211,238,.6)"></div><div style="position:absolute;right:12px;bottom:12px;padding:4px 8px;border-radius:999px;background:rgba(0,0,0,.35);border:1px solid rgba(103,232,249,.2);font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#d6fbff">Scan live</div></div></div><div style="margin-top:12px;font-size:14px;color:rgba(207,250,254,.7)">Point the camera at the bolt and highlight the suspected O-ring location.</div></div>`;}
+    function resultScreen(){return `<div class="screen ${state.screen==="result"?"active":""}">${statusBar()}${header("Result","Diagnosis Result",`${currentMarker().name} · confidence scoring and safe next steps`)}<div class="card dark"><div class="row" style="justify-content:flex-start;gap:8px;"><span>📊</span><span class="smallcaps" style="color:rgba(165,243,252,.75)">Fix Confidence</span></div><div style="margin-top:14px;font-size:14px;color:rgba(207,250,254,.7)">Most likely fix</div><div style="margin-top:4px;font-size:32px;line-height:1;font-weight:700;letter-spacing:-.04em;">85% Bolt sail O-ring</div><div class="stack" style="margin-top:18px;"><div style="padding:12px 14px;border-radius:16px;background:rgba(255,255,255,.06);font-size:14px;">40% Dirty spool or old grease</div><div style="padding:12px 14px;border-radius:16px;background:rgba(255,255,255,.06);font-size:14px;">25% Reg pressure issue</div></div></div>${oRingVisual()}${videoGuideCard()}${liveDiagnosticsCard()}${warningCard()}${communityCard()}<div class="grid-2"><button class="btn primary" onclick="setScreen('cook')">Start Fix</button><button class="btn secondary" onclick="state.tab='parts'; setScreen('parts')">Find Parts</button></div><button class="btn primary" onclick="setScreen('scanner')">Scan Marker Live 📷</button><button class="btn secondary" onclick="openExternal(currentMarker().manualUrl)">Open Real Manual ↗</button></div>`;}
+    function manualScreen(){return `<div class="screen ${state.screen==="manual"?"active":""}">${statusBar()}${header("Manual",`Search ${currentMarker().name} Manual`,"Search service topics, then open the real DYE manual PDF.")}<div class="card" style="padding:14px 16px;"><input value="${state.manualQuery.replace(/"/g,'&quot;')}" oninput="state.manualQuery=this.value; render()" placeholder="Search manual topics" style="width:100%;background:transparent;border:none;color:white;font-size:16px;outline:none;" /></div><div class="topic-list">${filteredTopics().map(topic=>`<div class="card clickable" onclick="setScreen('cook')"><div class="topic-item"><div><div class="title-sm">${topic}</div><div style="margin-top:4px;font-size:12px;color:rgba(255,255,255,.62)">Open a guided repair view</div></div><div>›</div></div></div>`).join("")}</div><div class="grid-2"><button class="btn secondary" onclick="openExternal(currentMarker().manualUrl)">Open PDF ↗</button><button class="btn secondary" onclick="openExternal(partsLinks.all)">Parts Page ↗</button></div></div>`;}
+    function partsScreen(){const m=currentMarker();return `<div class="screen ${state.screen==="parts"?"active":""}">${statusBar()}${header("Parts",`${m.name} Parts & Compatibility`,"Open the right part category fast.")}<div class="card"><div class="title-md">Quick parts for this marker</div><div class="chip-wrap">${m.quickParts.map(p=>`<div class="chip">${p}</div>`).join("")}</div></div><div class="grid-2"><button class="btn secondary" onclick="openExternal(partsLinks.orings)">O-Rings</button><button class="btn secondary" onclick="openExternal(partsLinks.eyepipes)">Eye Pipes</button><button class="btn secondary" onclick="openExternal(partsLinks.electronics)">Electronics</button><button class="btn secondary" onclick="openExternal(partsLinks.regs)">Reg Parts</button></div><button class="btn primary" onclick="openExternal(partsLinks.all)">Open All Replacement Parts ↗</button></div>`;}
+    function cookScreen(){const steps={1:"Degas the marker and remove the bolt assembly.",2:"Wipe off old grease and inspect the sail O-ring.",3:"Replace the O-ring, grease lightly, and reassemble."};return `<div class="screen ${state.screen==="cook"?"active":""}">${statusBar()}${header("Cook Mode","Replace Bolt O-Ring","One step at a time. Big controls. Field ready.")}<div class="card" style="border-radius:38px;"><div style="text-align:center;display:flex;flex-direction:column;gap:12px;"><div class="smallcaps" style="color:rgba(103,232,249,.6)">Step ${state.step} of 3</div><div style="font-size:26px;line-height:1.25;font-weight:700;letter-spacing:-.03em;">${steps[state.step]}</div></div></div>${oRingVisual()}${videoGuideCard()}${liveDiagnosticsCard()}<div class="grid-2"><button class="btn secondary" ${state.step===1?'disabled':''} onclick="stepBack()">Back</button><button class="btn primary" ${state.step===3?'disabled':''} onclick="stepNext()">Next</button></div></div>`;}
+    function scannerScreen(){const m=currentMarker();return `<div class="screen ${state.screen==="scanner"?"active":""}">${statusBar()}${header("Camera Scanner","Scan Your Marker","Point your camera at the marker to identify the exact part and issue location.")}<div class="card" style="padding:0;overflow:hidden;background:linear-gradient(135deg, rgba(6,182,212,.12), rgba(59,130,246,.08));"><div class="scanner-preview"><img src="${m.photo}" alt="${m.name}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;padding:40px;opacity:.9;" /><div class="scanner-frame"></div><div class="scanner-line"></div><div class="scanner-tag">Scanning bolt assembly</div></div></div>${liveDiagnosticsCard()}<div class="grid-2"><button class="btn secondary" onclick="setScreen('result')">Use Last Match</button><button class="btn primary" onclick="setScreen('result')">Confirm Part</button></div></div>`;}
+    function savedScreen(){const m=currentMarker();return `<div class="screen ${state.screen==="saved"?"active":""}">${statusBar()}${header("Saved","Saved & Spare Kit","Quick access to what you keep on hand.")}<div class="card"><div class="title-md">${m.name} spare kit</div><div class="stack" style="margin-top:16px;font-size:14px;color:rgba(255,255,255,.76)"><div>✅ O-rings</div><div>❌ Eye pipe</div><div>❌ Detents</div><div>✅ Battery</div></div></div><button class="btn primary" onclick="openExternal(partsLinks.all)">Build My Spare Kit ↗</button></div>`;}
+    function tabBar(){const tabs=[["home","Home"],["fix","Fix"],["manual","Manual"],["parts","Parts"],["saved","Saved"]];return `<div class="tabbar-wrap"><div class="tabbar"><div class="grabber"></div><div class="tabs">${tabs.map(([id,label])=>`<button class="tab ${state.tab===id?'active':''}" onclick="setTab('${id}')"><div class="tab-icon">${icon(label)}</div><span>${label}</span></button>`).join("")}</div></div></div>`;}
+    function render(){
+      const checks=runSelfCheck();
+      if(!checks.hasOpenExternal || !checks.hasMarkers || !checks.hasAppRoot){
+        document.body.innerHTML='<div style="padding:24px;color:white;font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#05070c;min-height:100vh;">DYE Assist demo failed self-check.</div>'; return;
+      }
+      app.className=`app ${state.fieldMode?'field-mode':''}`;
+      document.body.style.background = state.fieldMode ? '#000' : 'radial-gradient(circle at top, rgba(0,200,255,0.15), transparent 35%), radial-gradient(circle at bottom, rgba(0,255,150,0.10), transparent 35%), radial-gradient(circle at center, rgba(59,130,246,0.08), transparent 40%), linear-gradient(to bottom, #02040a, #05070c, #0a0f1a)';
+      app.innerHTML=`${homeScreen()}${markerSelectScreen()}${diagnosisScreen()}${resultScreen()}${manualScreen()}${partsScreen()}${cookScreen()}${scannerScreen()}${savedScreen()}${tabBar()}`;
+    }
+    window.setScreen=setScreen; window.setTab=setTab; window.selectMarker=selectMarker; window.toggleFieldMode=toggleFieldMode; window.openExternal=openExternal; window.stepBack=stepBack; window.stepNext=stepNext; window.state=state;
+    render();
+  </script>
+</body>
+</html>
